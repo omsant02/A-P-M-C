@@ -78,12 +78,12 @@ export interface AIGenerationRequest {
   type: 'prediction' | 'image';
   prompt?: string;
   style?: string;
-  parameters?: Record<string, any>;
+  parameters?: Record<string, unknown>;
 }
 
 export interface AIGenerationResponse {
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: string;
   usage?: {
     promptTokens: number;
@@ -102,7 +102,7 @@ export interface AppState {
 }
 
 // API response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;

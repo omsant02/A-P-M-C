@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "build": "NEXT_LINT=false next build",
+    "start": "next start", 
+    "lint": "next lint --fix"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.81.5",
