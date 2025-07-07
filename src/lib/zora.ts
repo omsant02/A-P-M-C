@@ -1,12 +1,12 @@
-import { createPublicClient, http, Address } from 'viem';
+import { Address } from 'viem';
 import { baseSepolia } from 'viem/chains';
 
 // Real Zora SDK imports - KEEPING THE REAL STUFF!
 import { 
   getCoin,
   createMetadataBuilder,
-  createZoraUploaderForCreator,
-  DeployCurrency
+  createZoraUploaderForCreator
+  // DeployCurrency - Available for future use
 } from '@zoralabs/coins-sdk';
 
 // Types for our implementation
@@ -32,10 +32,11 @@ interface TradeResponse {
 }
 
 // Public client for Base Sepolia (HACKATHON NETWORK)
-const publicClient = createPublicClient({
-  chain: baseSepolia,
-  transport: http('https://sepolia.base.org')
-});
+// Available for future blockchain queries when needed
+// const publicClient = createPublicClient({
+//   chain: baseSepolia,
+//   transport: http('https://sepolia.base.org')
+// });
 
 // REAL Zora coin creation with fallback for demo
 export async function createPredictionCoin(params: CreateCoinParams): Promise<CoinResponse> {
@@ -222,11 +223,11 @@ export async function getCoinPrice(coinAddress: Address): Promise<string> {
         const totalSupplyNum = parseFloat(coin.totalSupply);
         const pricePerToken = marketCapNum / totalSupplyNum;
         
-        console.log(`✅ REAL price from Zora API: $${pricePerToken.toFixed(8)}`);
-        return `$${pricePerToken.toFixed(8)}`;
+        console.log(`✅ REAL price from Zora API: ${pricePerToken.toFixed(8)}`);
+        return `${pricePerToken.toFixed(8)}`;
       }
-    } catch (realError) {
-      console.log('⚠️ Real price fetch failed, using enhanced simulation');
+    } catch (e) {
+      console.log('⚠️ Real price fetch failed, using enhanced simulation', e);
     }
     
     // Enhanced price simulation with realistic market dynamics
