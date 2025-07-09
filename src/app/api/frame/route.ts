@@ -1,10 +1,18 @@
+// Replace your frame route with this async solution
 import { NextRequest, NextResponse } from 'next/server';
 import { generateCryptoPrediction, generateMemeImage } from '@/lib/ai';
 import { createPredictionCoin, buyCoin, getCoinPrice, createCoinMetadata } from '@/lib/zora';
 import { Prediction } from '@/lib/types';
 import { Address } from 'viem';
 
-// Enhanced prediction with full metadata
+// In-memory storage for demo (use Redis/database in production)
+const pendingGenerations = new Map<string, {
+  prediction: Prediction;
+  status: 'generating' | 'complete' | 'failed';
+  startTime: number;
+}>();
+
+// Current prediction state
 let currentPrediction: Prediction = {
   id: '1',
   text: "🚀 Bitcoin will break $150K by end of 2025!",
@@ -40,18 +48,10 @@ export async function GET() {
         <meta property="og:description" content="AI generates crypto predictions, creates memes, and makes tradeable coins!" />
         <meta property="og:image" content="${currentPrediction.image}" />
       </head>
-      <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-        <div style="max-width: 500px; margin: 0 auto; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-          <h1 style="color: #333; margin-bottom: 20px;">🤖 AI Prediction Meme Coiner</h1>
-          <img src="${currentPrediction.image}" alt="Prediction Meme" style="width: 100%; border-radius: 10px; margin-bottom: 20px;" />
-          <h2 style="color: #555; margin-bottom: 15px;">${currentPrediction.text}</h2>
-          <div style="background: #f0f0f0; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-            <strong>${currentPrediction.coinSymbol} Coin: ${currentPrediction.price}</strong>
-            <div style="font-size: 12px; color: #666; margin-top: 5px;">
-              Confidence: ${currentPrediction.confidence} • ${currentPrediction.category} • ${currentPrediction.timeframe}
-            </div>
-          </div>
-          <p style="color: #777;">Click buttons above in Farcaster to interact!</p>
+      <body>
+        <div style="text-align: center; padding: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <h1>🤖 AI Prediction Meme Coiner</h1>
+          <p>Click buttons above in Farcaster to interact!</p>
         </div>
       </body>
     </html>
@@ -66,17 +66,12 @@ export async function POST(req: NextRequest) {
   try {
     console.log('📨 Frame POST request received');
     
-    // Better frame data parsing
     const body = await req.text();
     console.log('📝 Request body:', body);
     
-    // Parse button from frame data - improved parsing
+    // Parse button from frame data
     let buttonPressed = 1;
-    
-    // Try different parsing methods
-    if (body.includes('buttonIndex=1') || body.includes('button.1')) {
-      buttonPressed = 1;
-    } else if (body.includes('buttonIndex=2') || body.includes('button.2')) {
+    if (body.includes('buttonIndex=2') || body.includes('button.2')) {
       buttonPressed = 2;
     } else if (body.includes('buttonIndex=3') || body.includes('button.3')) {
       buttonPressed = 3;
@@ -89,71 +84,25 @@ export async function POST(req: NextRequest) {
     let responseImage = currentPrediction.image;
     let newPrediction = currentPrediction;
     let statusMessage = '';
+    let buttonText = "🎲 Generate New";
     
     if (buttonPressed === 1) {
-      // Generate new AI prediction with real AI
-      console.log('🧠 Generating new AI prediction...');
+      // ASYNC GENERATION PATTERN
+      console.log('🧠 Starting async AI generation...');
       
-      try {
-        const aiPrediction = await generateCryptoPrediction();
-        console.log('✅ AI prediction generated:', aiPrediction.text);
-        
-        // Generate meme image
-        console.log('🎨 Generating meme image...');
-        const memeResult = await generateMemeImage(aiPrediction.text);
-        console.log('✅ Meme generation result:', { 
-          success: memeResult.success, 
-          url: memeResult.url,
-          error: memeResult.error 
-        });
-        
-        // Create coin metadata
-        const metadata = createCoinMetadata(aiPrediction.text, memeResult.url);
-        
-        // Create Zora coin
-        console.log('🪙 Creating Zora coin...');
-        const coinResult = await createPredictionCoin({
-          name: metadata.name,
-          symbol: metadata.symbol,
-          description: metadata.description,
-          image: memeResult.url,
-          payoutRecipient: '0x742d35Cc6634C0532925a3b8D926F2E4F4c4e5b0' as Address
-        });
-        
-        if (coinResult.success) {
-          console.log('✅ Coin created successfully!', coinResult.coinAddress);
-          statusMessage = '🎉 New coin created!';
-        } else {
-          console.log('❌ Coin creation failed:', coinResult.error);
-          statusMessage = '⚠️ Coin creation simulated';
-        }
-        
-        newPrediction = {
-          id: Date.now().toString(),
-          text: aiPrediction.text,
-          image: memeResult.url,
-          coinSymbol: metadata.symbol,
-          coinAddress: coinResult.coinAddress,
-          price: `$${(Math.random() * 0.1 + 0.01).toFixed(4)}`,
-          confidence: aiPrediction.confidence,
-          timeframe: aiPrediction.timeframe,
-          category: aiPrediction.category,
-          createdAt: new Date(),
-          transactionHash: coinResult.transactionHash
-        };
-        
-        currentPrediction = newPrediction;
-        responseImage = memeResult.url;
-        
-        console.log('🎉 New prediction created successfully!');
-        
-      } catch (error) {
-        console.error('❌ Error in prediction generation:', error);
-        statusMessage = '⚠️ Using fallback prediction';
-      }
+      // Generate a unique ID for this generation
+      const generationId = Date.now().toString();
+      
+      // Start async generation immediately (don't await)
+      startAsyncGeneration(generationId);
+      
+      // Return loading state immediately (within 5 seconds)
+      responseImage = `https://via.placeholder.com/400x400/667eea/ffffff?text=🤖+AI+is+generating...+Click+refresh+in+5+seconds!`;
+      statusMessage = '🔄 Generating AI prediction...';
+      buttonText = "🔄 Check Status";
       
     } else if (buttonPressed === 2) {
-      // Buy coin
+      // Buy coin logic remains the same
       console.log('💰 Processing buy order...');
       
       if (currentPrediction.coinAddress) {
@@ -171,14 +120,13 @@ export async function POST(req: NextRequest) {
       }
       
     } else if (buttonPressed === 3) {
-      // Check current price
+      // Check price logic remains the same
       console.log('📊 Fetching current price...');
       
       const currentPrice = currentPrediction.coinAddress 
         ? await getCoinPrice(currentPrediction.coinAddress)
         : currentPrediction.price;
       
-      // Update price with some simulation
       const priceChange = (Math.random() - 0.5) * 0.02;
       const newPrice = parseFloat(currentPrice.replace('$', '')) + priceChange;
       currentPrediction.price = `$${Math.max(0.0001, newPrice).toFixed(4)}`;
@@ -187,9 +135,40 @@ export async function POST(req: NextRequest) {
       statusMessage = `💹 ${currentPrediction.coinSymbol}: ${currentPrediction.price}`;
       
     } else if (buttonPressed === 4) {
-      // Refresh current prediction
-      responseImage = currentPrediction.image;
-      statusMessage = '🔄 Refreshed!';
+      // Refresh - check for completed generations
+      console.log('🔄 Checking for completed generations...');
+      
+      // Check if any generation is complete
+      const completedGeneration = Array.from(pendingGenerations.entries())
+        .find(([_, gen]) => gen.status === 'complete');
+      
+      if (completedGeneration) {
+        const [genId, generation] = completedGeneration;
+        console.log('✅ Found completed generation:', genId);
+        
+        // Use the completed generation
+        newPrediction = generation.prediction;
+        currentPrediction = newPrediction;
+        responseImage = newPrediction.image;
+        statusMessage = '🎉 New AI prediction ready!';
+        
+        // Clean up
+        pendingGenerations.delete(genId);
+        
+      } else {
+        // Check if still generating
+        const generatingCount = Array.from(pendingGenerations.values())
+          .filter(gen => gen.status === 'generating').length;
+        
+        if (generatingCount > 0) {
+          responseImage = `https://via.placeholder.com/400x400/ff9800/ffffff?text=🤖+Still+generating...+Try+again+in+5+seconds!`;
+          statusMessage = '⏳ AI is still working...';
+          buttonText = "🔄 Check Again";
+        } else {
+          responseImage = currentPrediction.image;
+          statusMessage = '🔄 Refreshed!';
+        }
+      }
     }
     
     console.log('📤 Sending frame response with image:', responseImage);
@@ -201,7 +180,7 @@ export async function POST(req: NextRequest) {
           <meta charset="utf-8">
           <meta property="fc:frame" content="vNext" />
           <meta property="fc:frame:image" content="${responseImage}" />
-          <meta property="fc:frame:button:1" content="🎲 Generate New" />
+          <meta property="fc:frame:button:1" content="${buttonText}" />
           <meta property="fc:frame:button:2" content="💰 Buy ${newPrediction.coinSymbol}" />
           <meta property="fc:frame:button:3" content="📊 Price" />
           <meta property="fc:frame:button:4" content="🔄 Refresh" />
@@ -241,3 +220,83 @@ export async function POST(req: NextRequest) {
     });
   }
 }
+
+// Async generation function - runs in background
+async function startAsyncGeneration(generationId: string) {
+  try {
+    console.log(`🚀 Starting async generation ${generationId}`);
+    
+    // Mark as generating
+    pendingGenerations.set(generationId, {
+      prediction: currentPrediction,
+      status: 'generating',
+      startTime: Date.now()
+    });
+    
+    // Generate prediction
+    const aiPrediction = await generateCryptoPrediction();
+    console.log(`✅ AI prediction generated for ${generationId}:`, aiPrediction.text);
+    
+    // Generate meme image (this takes 5-10 seconds)
+    const memeResult = await generateMemeImage(aiPrediction.text);
+    console.log(`✅ Meme generated for ${generationId}:`, { 
+      success: memeResult.success, 
+      url: memeResult.url 
+    });
+    
+    // Create coin metadata
+    const metadata = createCoinMetadata(aiPrediction.text, memeResult.url);
+    
+    // Create Zora coin
+    const coinResult = await createPredictionCoin({
+      name: metadata.name,
+      symbol: metadata.symbol,
+      description: metadata.description,
+      image: memeResult.url,
+      payoutRecipient: '0x742d35Cc6634C0532925a3b8D926F2E4F4c4e5b0' as Address
+    });
+    
+    const newPrediction: Prediction = {
+      id: generationId,
+      text: aiPrediction.text,
+      image: memeResult.url,
+      coinSymbol: metadata.symbol,
+      coinAddress: coinResult.coinAddress,
+      price: `$${(Math.random() * 0.1 + 0.01).toFixed(4)}`,
+      confidence: aiPrediction.confidence,
+      timeframe: aiPrediction.timeframe,
+      category: aiPrediction.category,
+      createdAt: new Date(),
+      transactionHash: coinResult.transactionHash
+    };
+    
+    // Mark as complete
+    pendingGenerations.set(generationId, {
+      prediction: newPrediction,
+      status: 'complete',
+      startTime: Date.now()
+    });
+    
+    console.log(`🎉 Generation ${generationId} completed successfully!`);
+    
+  } catch (error) {
+    console.error(`❌ Generation ${generationId} failed:`, error);
+    
+    // Mark as failed
+    pendingGenerations.set(generationId, {
+      prediction: currentPrediction,
+      status: 'failed',
+      startTime: Date.now()
+    });
+  }
+}
+
+// Cleanup old generations (call this periodically)
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, gen] of pendingGenerations.entries()) {
+    if (now - gen.startTime > 60000) { // 1 minute timeout
+      pendingGenerations.delete(id);
+    }
+  }
+}, 30000); // Clean up every 30 seconds
