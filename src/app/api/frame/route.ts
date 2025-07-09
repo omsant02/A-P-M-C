@@ -5,14 +5,12 @@ import { createPredictionCoin, buyCoin, getCoinPrice, createCoinMetadata } from 
 import { Prediction } from '@/lib/types';
 import { Address } from 'viem';
 
-// In-memory storage for demo (use Redis/database in production)
 const pendingGenerations = new Map<string, {
   prediction: Prediction;
   status: 'generating' | 'complete' | 'failed';
   startTime: number;
 }>();
 
-// Current prediction state
 let currentPrediction: Prediction = {
   id: '1',
   text: "🚀 Bitcoin will break $150K by end of 2025!",
@@ -69,7 +67,6 @@ export async function POST(req: NextRequest) {
     const body = await req.text();
     console.log('📝 Request body:', body);
     
-    // Parse button from frame data
     let buttonPressed = 1;
     if (body.includes('buttonIndex=2') || body.includes('button.2')) {
       buttonPressed = 2;
@@ -87,22 +84,17 @@ export async function POST(req: NextRequest) {
     let buttonText = "🎲 Generate New";
     
     if (buttonPressed === 1) {
-      // ASYNC GENERATION PATTERN
       console.log('🧠 Starting async AI generation...');
       
-      // Generate a unique ID for this generation
       const generationId = Date.now().toString();
       
-      // Start async generation immediately (don't await)
       startAsyncGeneration(generationId);
       
-      // Return loading state immediately (within 5 seconds)
       responseImage = `https://via.placeholder.com/400x400/667eea/ffffff?text=🤖+AI+is+generating...+Click+refresh+in+5+seconds!`;
       statusMessage = '🔄 Generating AI prediction...';
       buttonText = "🔄 Check Status";
       
     } else if (buttonPressed === 2) {
-      // Buy coin logic remains the same
       console.log('💰 Processing buy order...');
       
       if (currentPrediction.coinAddress) {
@@ -120,7 +112,6 @@ export async function POST(req: NextRequest) {
       }
       
     } else if (buttonPressed === 3) {
-      // Check price logic remains the same
       console.log('📊 Fetching current price...');
       
       const currentPrice = currentPrediction.coinAddress 
@@ -135,10 +126,8 @@ export async function POST(req: NextRequest) {
       statusMessage = `💹 ${currentPrediction.coinSymbol}: ${currentPrediction.price}`;
       
     } else if (buttonPressed === 4) {
-  // Refresh - check for completed generations
   console.log('🔄 Checking for completed generations...');
   
-  // Check if any generation is complete
   let completedGeneration: { id: string; generation: { prediction: Prediction; status: string; startTime: number } } | null = null;
   for (const [genId, gen] of pendingGenerations.entries()) {
     if (gen.status === 'complete') {
@@ -150,17 +139,14 @@ export async function POST(req: NextRequest) {
   if (completedGeneration) {
     console.log('✅ Found completed generation:', completedGeneration.id);
     
-    // Use the completed generation
     newPrediction = completedGeneration.generation.prediction;
     currentPrediction = newPrediction;
     responseImage = newPrediction.image;
     statusMessage = '🎉 New AI prediction ready!';
     
-    // Clean up
     pendingGenerations.delete(completedGeneration.id);
     
   } else {
-    // Check if still generating
     const generatingCount = Array.from(pendingGenerations.values())
       .filter(gen => gen.status === 'generating').length;
     
@@ -237,7 +223,6 @@ async function startAsyncGeneration(generationId: string) {
       startTime: Date.now()
     });
     
-    // Generate prediction
     const aiPrediction = await generateCryptoPrediction();
     console.log(`✅ AI prediction generated for ${generationId}:`, aiPrediction.text);
     
@@ -248,10 +233,8 @@ async function startAsyncGeneration(generationId: string) {
       url: memeResult.url 
     });
     
-    // Create coin metadata
     const metadata = createCoinMetadata(aiPrediction.text, memeResult.url);
     
-    // Create Zora coin
     const coinResult = await createPredictionCoin({
       name: metadata.name,
       symbol: metadata.symbol,
@@ -274,7 +257,6 @@ async function startAsyncGeneration(generationId: string) {
       transactionHash: coinResult.transactionHash
     };
     
-    // Mark as complete
     pendingGenerations.set(generationId, {
       prediction: newPrediction,
       status: 'complete',
@@ -286,7 +268,6 @@ async function startAsyncGeneration(generationId: string) {
   } catch (error) {
     console.error(`❌ Generation ${generationId} failed:`, error);
     
-    // Mark as failed
     pendingGenerations.set(generationId, {
       prediction: currentPrediction,
       status: 'failed',

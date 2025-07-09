@@ -19,7 +19,6 @@ export interface MemeImageResult {
   error?: string;
 }
 
-// Keep your existing generateCryptoPrediction function exactly as is
 export async function generateCryptoPrediction(): Promise<PredictionResult> {
   try {
     const predictionPrompts = [
@@ -47,7 +46,6 @@ export async function generateCryptoPrediction(): Promise<PredictionResult> {
 
     const predictionText = completion.choices[0]?.message?.content || "Bitcoin will reach $150K by December 2025!";
     
-    // Analyze prediction characteristics
     const confidence = analyzeConfidence(predictionText);
     const timeframe = extractTimeframe(predictionText);
     const category = categorize(predictionText);
@@ -62,7 +60,6 @@ export async function generateCryptoPrediction(): Promise<PredictionResult> {
   } catch (error) {
     console.error('AI prediction error:', error);
     
-    // Fallback predictions
     const fallbacks = [
       "Bitcoin will hit $200K by end of 2025!",
       "Ethereum will flip Bitcoin by Q3 2025!",
@@ -82,7 +79,6 @@ export async function generateCryptoPrediction(): Promise<PredictionResult> {
   }
 }
 
-// FIXED: Generate meme image with proper proxy URL
 export async function generateMemeImage(prediction: string): Promise<MemeImageResult> {
   try {
     console.log('🎨 Generating REAL DALL-E meme for:', prediction);
@@ -108,7 +104,6 @@ export async function generateMemeImage(prediction: string): Promise<MemeImageRe
 
     const data = response.data;
     if (data && data[0] && data[0].url) {
-      // THIS IS THE KEY FIX: Proxy the image through your own server
       const originalUrl = data[0].url;
       const proxyUrl = `${process.env.NEXT_PUBLIC_URL}/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
       
@@ -138,7 +133,6 @@ export async function generateMemeImage(prediction: string): Promise<MemeImageRe
   }
 }
 
-// Keep all your existing helper functions exactly as they are
 function analyzeConfidence(prediction: string): 'Low' | 'Medium' | 'High' {
   const lowConfidenceWords = ['might', 'could', 'possibly', 'maybe', 'potential'];
   const highConfidenceWords = ['will', 'definitely', 'guaranteed', 'certainly', 'absolutely'];
@@ -196,7 +190,6 @@ function createFallbackImage(prediction: string): string {
   return `https://via.placeholder.com/400x400/${randomColor}/ffffff?text=${encodedPrediction}`;
 }
 
-// Keep your existing generateTrendingTopics function exactly as is
 export async function generateTrendingTopics(): Promise<string[]> {
   try {
     const completion = await openai.chat.completions.create({
