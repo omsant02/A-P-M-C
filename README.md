@@ -2,8 +2,6 @@
 
 **The first social platform that turns AI-generated crypto predictions into tradeable memes and instant coins.**
 
-![AI Prediction Meme Coiner](https://via.placeholder.com/800x400/667eea/ffffff?text=🤖+AI+Prediction+Meme+Coiner)
-
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Vercel-black?style=for-the-badge)](https://a-p-m-c-om-santoshwars-projects.vercel.app)
 [![Farcaster Frame](https://img.shields.io/badge/📱_Farcaster-Frame-purple?style=for-the-badge)](https://a-p-m-c-om-santoshwars-projects.vercel.app/api/frame)
 [![Built for Zora](https://img.shields.io/badge/⚡_Built_for-Zora_Coinathon-blue?style=for-the-badge)](https://coinathon.encode.club/)
@@ -17,6 +15,21 @@ A revolutionary Farcaster frame that combines **AI predictions**, **viral memes*
 - **Viral mechanics** through meme sharing + financial incentives
 - **Creator monetization** through prediction accuracy and trading fees
 - **Social trading** where memes become investment opportunities
+
+## 🎮 **Demo Instructions for Judges**
+
+**Testing the Frame:**
+1. **Visit**: [`https://a-p-m-c-om-santoshwars-projects.vercel.app/api/frame`](https://a-p-m-c-om-santoshwars-projects.vercel.app/api/frame)
+2. **Click "🎲 Generate New Prediction"** - Frame shows "AI is generating..."
+3. **Wait 5-10 seconds** for real DALL-E generation
+4. **Click "🔄 Check Status"** to see the completed AI meme
+5. **Try other buttons**: "💰 Buy", "📊 Price", "🔄 Refresh"
+
+**What You'll Experience:**
+- Real GPT-4o generated crypto predictions
+- DALL-E 3 viral meme images (generated async to avoid timeout)
+- Zora coin creation on Base Sepolia
+- Functional trading simulation with price dynamics
 
 ## 🚀 **How It Works**
 
@@ -55,6 +68,7 @@ A revolutionary Farcaster frame that combines **AI predictions**, **viral memes*
 - **OpenAI GPT-4o** - Advanced crypto prediction generation
 - **DALL-E 3** - Viral meme image creation
 - **Smart prompting** - Context-aware AI responses
+- **Async processing** - Handles 5-second frame timeout limits
 
 ### **Blockchain & Web3**
 - **Zora Protocol CoinV4** - Instant coin creation and trading
@@ -65,19 +79,8 @@ A revolutionary Farcaster frame that combines **AI predictions**, **viral memes*
 ### **Infrastructure**
 - **Vercel** - Serverless deployment
 - **IPFS** - Decentralized metadata storage
+- **Image Proxy** - Solves CORS issues for Farcaster frames
 - **Base Sepolia** - Testnet for development and demo
-
-## 🎮 **Live Demo**
-
-### **Try the Frame:**
-1. Visit: [Live Frame](https://a-p-m-c-om-santoshwars-projects.vercel.app/api/frame)
-2. Or test in Farcaster: Share the frame URL in Warpcast
-
-### **Button Functions:**
-- **🎲 Generate New Prediction** - Creates AI prediction + meme + coin
-- **💰 Buy [SYMBOL]** - Purchase prediction coins
-- **📊 Check Price** - View current market price
-- **🔄 Refresh** - Update frame state
 
 ## 🏗 **Architecture**
 
@@ -127,6 +130,32 @@ User Interaction (Farcaster)
 - **Error handling**: Graceful fallbacks throughout
 - **Production ready**: Deployed and tested
 
+## 🎨 **Key Features**
+
+### **🤖 AI-Powered Predictions**
+- GPT-4o analyzes crypto trends and market sentiment
+- Generates specific, bold predictions with confidence levels
+- Categorizes predictions (Price, Technology, Adoption, Regulation)
+- Smart fallback system ensures reliability
+
+### **🎭 Viral Meme Generation**
+- DALL-E 3 creates shareable meme images
+- Multiple meme styles (Pepe, Wojak, Diamond Hands, etc.)
+- Optimized for social media sharing
+- Automatic crypto symbol integration
+
+### **🪙 Instant Tokenization**
+- One-click coin creation on Zora Protocol
+- Real Base Sepolia deployment for hackathon
+- Automatic Uniswap V4 pool creation
+- Creator earnings on every trade
+
+### **📱 Farcaster Native**
+- Works directly in social feeds
+- No app switching required
+- Native button interactions
+- Seamless sharing experience
+
 ## 🚀 **Getting Started**
 
 ### **Prerequisites**
@@ -138,8 +167,8 @@ User Interaction (Farcaster)
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ai-meme-coiner
-cd ai-meme-coiner
+git clone https://github.com/omsant02/A-P-M-C.git
+cd A-P-M-C
 
 # Install dependencies
 npm install
@@ -169,32 +198,6 @@ vercel --prod
 # Or deploy via GitHub integration
 git push origin main
 ```
-
-## 🎨 **Key Features**
-
-### **🤖 AI-Powered Predictions**
-- GPT-4o analyzes crypto trends and market sentiment
-- Generates specific, bold predictions with confidence levels
-- Categorizes predictions (Price, Technology, Adoption, Regulation)
-- Smart fallback system ensures reliability
-
-### **🎭 Viral Meme Generation**
-- DALL-E 3 creates shareable meme images
-- Multiple meme styles (Pepe, Wojak, Diamond Hands, etc.)
-- Optimized for social media sharing
-- Automatic crypto symbol integration
-
-### **🪙 Instant Tokenization**
-- One-click coin creation on Zora Protocol
-- Real Base Sepolia deployment for hackathon
-- Automatic Uniswap V4 pool creation
-- Creator earnings on every trade
-
-### **📱 Farcaster Native**
-- Works directly in social feeds
-- No app switching required
-- Native button interactions
-- Seamless sharing experience
 
 ## 📊 **Market Opportunity**
 
@@ -277,7 +280,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Website**: [Live Demo](https://a-p-m-c-om-santoshwars-projects.vercel.app)
 - **Frame**: [Try in Farcaster](https://a-p-m-c-om-santoshwars-projects.vercel.app/api/frame)
-- **GitHub**: [Source Code](https://github.com/yourusername/ai-meme-coiner)
+- **GitHub**: [Source Code](https://github.com/omsant02/A-P-M-C)
 
 ---
 
