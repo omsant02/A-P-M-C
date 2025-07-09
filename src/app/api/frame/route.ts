@@ -135,46 +135,45 @@ export async function POST(req: NextRequest) {
       statusMessage = `💹 ${currentPrediction.coinSymbol}: ${currentPrediction.price}`;
       
     } else if (buttonPressed === 4) {
-      // Refresh - check for completed generations
-      // Refresh - check for completed generations
-console.log('🔄 Checking for completed generations...');
-
-// Check if any generation is complete
-let completedGeneration: [string, any] | null = null;
-for (const [genId, gen] of pendingGenerations.entries()) {
-  if (gen.status === 'complete') {
-    completedGeneration = [genId, gen];
-    break;
+  // Refresh - check for completed generations
+  console.log('🔄 Checking for completed generations...');
+  
+  // Check if any generation is complete
+  let completedGeneration: { id: string; generation: { prediction: Prediction; status: string; startTime: number } } | null = null;
+  for (const [genId, gen] of pendingGenerations.entries()) {
+    if (gen.status === 'complete') {
+      completedGeneration = { id: genId, generation: gen };
+      break;
+    }
+  }
+  
+  if (completedGeneration) {
+    console.log('✅ Found completed generation:', completedGeneration.id);
+    
+    // Use the completed generation
+    newPrediction = completedGeneration.generation.prediction;
+    currentPrediction = newPrediction;
+    responseImage = newPrediction.image;
+    statusMessage = '🎉 New AI prediction ready!';
+    
+    // Clean up
+    pendingGenerations.delete(completedGeneration.id);
+    
+  } else {
+    // Check if still generating
+    const generatingCount = Array.from(pendingGenerations.values())
+      .filter(gen => gen.status === 'generating').length;
+    
+    if (generatingCount > 0) {
+      responseImage = `https://via.placeholder.com/400x400/ff9800/ffffff?text=🤖+Still+generating...+Try+again+in+5+seconds!`;
+      statusMessage = '⏳ AI is still working...';
+      buttonText = "🔄 Check Again";
+    } else {
+      responseImage = currentPrediction.image;
+      statusMessage = '🔄 Refreshed!';
+    }
   }
 }
-
-if (completedGeneration) {
-  const [genId, generation] = completedGeneration;
-  console.log('✅ Found completed generation:', genId);
-  
-  // Use the completed generation
-  newPrediction = generation.prediction;
-  currentPrediction = newPrediction;
-  responseImage = newPrediction.image;
-  statusMessage = '🎉 New AI prediction ready!';
-  
-  // Clean up
-  pendingGenerations.delete(genId);
-}else {
-        // Check if still generating
-        const generatingCount = Array.from(pendingGenerations.values())
-          .filter(gen => gen.status === 'generating').length;
-        
-        if (generatingCount > 0) {
-          responseImage = `https://via.placeholder.com/400x400/ff9800/ffffff?text=🤖+Still+generating...+Try+again+in+5+seconds!`;
-          statusMessage = '⏳ AI is still working...';
-          buttonText = "🔄 Check Again";
-        } else {
-          responseImage = currentPrediction.image;
-          statusMessage = '🔄 Refreshed!';
-        }
-      }
-    }
     
     console.log('📤 Sending frame response with image:', responseImage);
     
