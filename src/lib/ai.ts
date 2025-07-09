@@ -1,3 +1,5 @@
+// Updated src/lib/ai.ts - ONLY CHANGE THE generateMemeImage function
+
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -17,7 +19,7 @@ export interface MemeImageResult {
   error?: string;
 }
 
-// Enhanced prediction generation with more variety
+// Keep your existing generateCryptoPrediction function exactly as is
 export async function generateCryptoPrediction(): Promise<PredictionResult> {
   try {
     const predictionPrompts = [
@@ -80,9 +82,11 @@ export async function generateCryptoPrediction(): Promise<PredictionResult> {
   }
 }
 
-// Generate viral meme image from prediction
+// FIXED: Generate meme image with proper proxy URL
 export async function generateMemeImage(prediction: string): Promise<MemeImageResult> {
   try {
+    console.log('🎨 Generating REAL DALL-E meme for:', prediction);
+    
     const memeStyles = [
       "viral crypto meme with bold text and rocket emojis",
       "pepe the frog style crypto meme",
@@ -104,8 +108,15 @@ export async function generateMemeImage(prediction: string): Promise<MemeImageRe
 
     const data = response.data;
     if (data && data[0] && data[0].url) {
+      // THIS IS THE KEY FIX: Proxy the image through your own server
+      const originalUrl = data[0].url;
+      const proxyUrl = `${process.env.NEXT_PUBLIC_URL}/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
+      
+      console.log('✅ DALL-E image generated successfully');
+      console.log('🔗 Proxy URL:', proxyUrl);
+      
       return {
-        url: data[0].url,
+        url: proxyUrl,
         success: true
       };
     }
@@ -127,7 +138,7 @@ export async function generateMemeImage(prediction: string): Promise<MemeImageRe
   }
 }
 
-// Analyze prediction confidence based on language
+// Keep all your existing helper functions exactly as they are
 function analyzeConfidence(prediction: string): 'Low' | 'Medium' | 'High' {
   const lowConfidenceWords = ['might', 'could', 'possibly', 'maybe', 'potential'];
   const highConfidenceWords = ['will', 'definitely', 'guaranteed', 'certainly', 'absolutely'];
@@ -143,7 +154,6 @@ function analyzeConfidence(prediction: string): 'Low' | 'Medium' | 'High' {
   }
 }
 
-// Extract timeframe from prediction
 function extractTimeframe(prediction: string): string {
   const timeframes = [
     { regex: /2025/i, value: '2025' },
@@ -162,7 +172,6 @@ function extractTimeframe(prediction: string): string {
   return '2025';
 }
 
-// Categorize prediction type
 function categorize(prediction: string): 'Price' | 'Technology' | 'Adoption' | 'Regulation' {
   const lowerPrediction = prediction.toLowerCase();
   
@@ -179,7 +188,6 @@ function categorize(prediction: string): 'Price' | 'Technology' | 'Adoption' | '
   }
 }
 
-// Create fallback image URL with prediction text
 function createFallbackImage(prediction: string): string {
   const encodedPrediction = encodeURIComponent(prediction);
   const colors = ['1a1a1a', '333333', '4a5568', '2d3748', '1a202c'];
@@ -188,7 +196,7 @@ function createFallbackImage(prediction: string): string {
   return `https://via.placeholder.com/400x400/${randomColor}/ffffff?text=${encodedPrediction}`;
 }
 
-// Generate trending crypto topics for more relevant predictions
+// Keep your existing generateTrendingTopics function exactly as is
 export async function generateTrendingTopics(): Promise<string[]> {
   try {
     const completion = await openai.chat.completions.create({
@@ -206,7 +214,6 @@ export async function generateTrendingTopics(): Promise<string[]> {
       try {
         return JSON.parse(content);
       } catch {
-        // Fallback if JSON parsing fails
         return content.split('\n').filter(line => line.trim().length > 0);
       }
     }

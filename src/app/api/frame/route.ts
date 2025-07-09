@@ -64,13 +64,27 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.text();
+    console.log('📨 Frame POST request received');
     
-    // Parse frame data (simplified)
+    // Better frame data parsing
+    const body = await req.text();
+    console.log('📝 Request body:', body);
+    
+    // Parse button from frame data - improved parsing
     let buttonPressed = 1;
-    if (body.includes('button.2')) buttonPressed = 2;
-    if (body.includes('button.3')) buttonPressed = 3;
-    if (body.includes('button.4')) buttonPressed = 4;
+    
+    // Try different parsing methods
+    if (body.includes('buttonIndex=1') || body.includes('button.1')) {
+      buttonPressed = 1;
+    } else if (body.includes('buttonIndex=2') || body.includes('button.2')) {
+      buttonPressed = 2;
+    } else if (body.includes('buttonIndex=3') || body.includes('button.3')) {
+      buttonPressed = 3;
+    } else if (body.includes('buttonIndex=4') || body.includes('button.4')) {
+      buttonPressed = 4;
+    }
+    
+    console.log('🔘 Button pressed:', buttonPressed);
     
     let responseImage = currentPrediction.image;
     let newPrediction = currentPrediction;
@@ -80,51 +94,63 @@ export async function POST(req: NextRequest) {
       // Generate new AI prediction with real AI
       console.log('🧠 Generating new AI prediction...');
       
-      const aiPrediction = await generateCryptoPrediction();
-      console.log('✅ AI prediction generated:', aiPrediction.text);
-      
-      // Generate meme image
-      console.log('🎨 Generating meme image...');
-      const memeResult = await generateMemeImage(aiPrediction.text);
-      console.log('✅ Meme generated:', memeResult.success ? 'Success' : 'Failed');
-      
-      // Create coin metadata
-      const metadata = createCoinMetadata(aiPrediction.text, memeResult.url);
-      
-      // Create Zora coin
-      console.log('🪙 Creating Zora coin...');
-      const coinResult = await createPredictionCoin({
-        name: metadata.name,
-        symbol: metadata.symbol,
-        description: metadata.description,
-        image: memeResult.url,
-        payoutRecipient: '0x742d35Cc6634C0532925a3b8D926F2E4F4c4e5b0' as Address // Demo address
-      });
-      
-      if (coinResult.success) {
-        console.log('✅ Coin created successfully!', coinResult.coinAddress);
-        statusMessage = '🎉 New coin created!';
-      } else {
-        console.log('❌ Coin creation failed:', coinResult.error);
-        statusMessage = '⚠️ Coin creation simulated';
+      try {
+        const aiPrediction = await generateCryptoPrediction();
+        console.log('✅ AI prediction generated:', aiPrediction.text);
+        
+        // Generate meme image
+        console.log('🎨 Generating meme image...');
+        const memeResult = await generateMemeImage(aiPrediction.text);
+        console.log('✅ Meme generation result:', { 
+          success: memeResult.success, 
+          url: memeResult.url,
+          error: memeResult.error 
+        });
+        
+        // Create coin metadata
+        const metadata = createCoinMetadata(aiPrediction.text, memeResult.url);
+        
+        // Create Zora coin
+        console.log('🪙 Creating Zora coin...');
+        const coinResult = await createPredictionCoin({
+          name: metadata.name,
+          symbol: metadata.symbol,
+          description: metadata.description,
+          image: memeResult.url,
+          payoutRecipient: '0x742d35Cc6634C0532925a3b8D926F2E4F4c4e5b0' as Address
+        });
+        
+        if (coinResult.success) {
+          console.log('✅ Coin created successfully!', coinResult.coinAddress);
+          statusMessage = '🎉 New coin created!';
+        } else {
+          console.log('❌ Coin creation failed:', coinResult.error);
+          statusMessage = '⚠️ Coin creation simulated';
+        }
+        
+        newPrediction = {
+          id: Date.now().toString(),
+          text: aiPrediction.text,
+          image: memeResult.url,
+          coinSymbol: metadata.symbol,
+          coinAddress: coinResult.coinAddress,
+          price: `$${(Math.random() * 0.1 + 0.01).toFixed(4)}`,
+          confidence: aiPrediction.confidence,
+          timeframe: aiPrediction.timeframe,
+          category: aiPrediction.category,
+          createdAt: new Date(),
+          transactionHash: coinResult.transactionHash
+        };
+        
+        currentPrediction = newPrediction;
+        responseImage = memeResult.url;
+        
+        console.log('🎉 New prediction created successfully!');
+        
+      } catch (error) {
+        console.error('❌ Error in prediction generation:', error);
+        statusMessage = '⚠️ Using fallback prediction';
       }
-      
-      newPrediction = {
-        id: Date.now().toString(),
-        text: aiPrediction.text,
-        image: memeResult.url,
-        coinSymbol: metadata.symbol,
-        coinAddress: coinResult.coinAddress,
-        price: `$${(Math.random() * 0.1 + 0.01).toFixed(4)}`,
-        confidence: aiPrediction.confidence,
-        timeframe: aiPrediction.timeframe,
-        category: aiPrediction.category,
-        createdAt: new Date(),
-        transactionHash: coinResult.transactionHash
-      };
-      
-      currentPrediction = newPrediction;
-      responseImage = memeResult.url;
       
     } else if (buttonPressed === 2) {
       // Buy coin
@@ -134,7 +160,7 @@ export async function POST(req: NextRequest) {
         const buyResult = await buyCoin(currentPrediction.coinAddress, '0.01');
         if (buyResult.success) {
           statusMessage = '✅ Purchase successful!';
-          responseImage = `https://via.placeholder.com/400x400/00ff00/ffffff?text=✅+Bought+${currentPrediction.coinSymbol}!+TX:+${buyResult.transactionHash?.slice(0, 8)}...`;
+          responseImage = `https://via.placeholder.com/400x400/00ff00/ffffff?text=✅+Bought+${currentPrediction.coinSymbol}!`;
         } else {
           statusMessage = '❌ Purchase failed';
           responseImage = `https://via.placeholder.com/400x400/ff6b6b/ffffff?text=❌+Purchase+Failed`;
@@ -157,7 +183,7 @@ export async function POST(req: NextRequest) {
       const newPrice = parseFloat(currentPrice.replace('$', '')) + priceChange;
       currentPrediction.price = `$${Math.max(0.0001, newPrice).toFixed(4)}`;
       
-      responseImage = `https://via.placeholder.com/400x400/0066cc/ffffff?text=${currentPrediction.coinSymbol}+Price:+${currentPrediction.price}+${priceChange > 0 ? '📈' : '📉'}`;
+      responseImage = `https://via.placeholder.com/400x400/0066cc/ffffff?text=${currentPrediction.coinSymbol}+Price:+${currentPrediction.price}`;
       statusMessage = `💹 ${currentPrediction.coinSymbol}: ${currentPrediction.price}`;
       
     } else if (buttonPressed === 4) {
@@ -165,6 +191,8 @@ export async function POST(req: NextRequest) {
       responseImage = currentPrediction.image;
       statusMessage = '🔄 Refreshed!';
     }
+    
+    console.log('📤 Sending frame response with image:', responseImage);
     
     const frameResponse = `
       <!DOCTYPE html>
@@ -193,7 +221,7 @@ export async function POST(req: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Frame error:', error);
+    console.error('❌ Frame error:', error);
     
     const errorFrame = `
       <!DOCTYPE html>
