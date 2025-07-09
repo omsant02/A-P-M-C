@@ -136,26 +136,31 @@ export async function POST(req: NextRequest) {
       
     } else if (buttonPressed === 4) {
       // Refresh - check for completed generations
-      console.log('🔄 Checking for completed generations...');
-      
-      // Check if any generation is complete
-      const completedGeneration = Array.from(pendingGenerations.entries())
-        .find(([id, gen]) => gen.status === 'complete');
-      
-      if (completedGeneration) {
-        const [genId, generation] = completedGeneration;
-        console.log('✅ Found completed generation:', genId);
-        
-        // Use the completed generation
-        newPrediction = generation.prediction;
-        currentPrediction = newPrediction;
-        responseImage = newPrediction.image;
-        statusMessage = '🎉 New AI prediction ready!';
-        
-        // Clean up
-        pendingGenerations.delete(genId);
-        
-      } else {
+      // Refresh - check for completed generations
+console.log('🔄 Checking for completed generations...');
+
+// Check if any generation is complete
+let completedGeneration: [string, any] | null = null;
+for (const [genId, gen] of pendingGenerations.entries()) {
+  if (gen.status === 'complete') {
+    completedGeneration = [genId, gen];
+    break;
+  }
+}
+
+if (completedGeneration) {
+  const [genId, generation] = completedGeneration;
+  console.log('✅ Found completed generation:', genId);
+  
+  // Use the completed generation
+  newPrediction = generation.prediction;
+  currentPrediction = newPrediction;
+  responseImage = newPrediction.image;
+  statusMessage = '🎉 New AI prediction ready!';
+  
+  // Clean up
+  pendingGenerations.delete(genId);
+}else {
         // Check if still generating
         const generatingCount = Array.from(pendingGenerations.values())
           .filter(gen => gen.status === 'generating').length;
@@ -290,13 +295,3 @@ async function startAsyncGeneration(generationId: string) {
     });
   }
 }
-
-// Cleanup old generations (call this periodically)
-setInterval(() => {
-  const now = Date.now();
-  for (const [id, gen] of pendingGenerations.entries()) {
-    if (now - gen.startTime > 60000) { // 1 minute timeout
-      pendingGenerations.delete(id);
-    }
-  }
-}, 30000); // Clean up every 30 seconds
