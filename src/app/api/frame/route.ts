@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
       
       // Check if any generation is complete
       const completedGeneration = Array.from(pendingGenerations.entries())
-        .find(([_, gen]) => gen.status === 'complete');
+        .find(([id, gen]) => gen.status === 'complete');
       
       if (completedGeneration) {
         const [genId, generation] = completedGeneration;
